@@ -107,3 +107,34 @@ For each signer, write one block in the monthly review file:
 - Put everything in reviews/YYYY-MM.md.
 - Sort the signers into: Confirmed, Unclear, and Not found.
 - Flag any claim older than 12 months as "possibly outdated."
+
+name: Monthly signer check
+
+on:
+  schedule:
+    - cron: "0 9 1 * *"   # 9:00 UTC on the 1st of each month
+  workflow_dispatch:       # lets you run it by hand to test
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create this month's review file
+        run: |
+          mkdir -p reviews
+          FILE="reviews/$(date +%Y-%m).md"
+          echo "# Signer review for $(date +%Y-%m)" > "$FILE"
+          echo "" >> "$FILE"
+          echo "Approve or reject each item before it goes live." >> "$FILE"
+
+      - name: Save the review file
+        run: |
+          git config user.name "signer-bot"
+          git config user.email "signer-bot@users.noreply.github.com"
+          git add reviews
+          git commit -m "Monthly signer review" || echo "Nothing new to save"
+          git push
