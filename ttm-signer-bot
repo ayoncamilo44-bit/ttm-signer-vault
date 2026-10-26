@@ -1,0 +1,37 @@
+# Signer bot instructions
+
+## Your job
+Once a month, check the public web for updates on the signers listed in the directory. Report what you find for the owner to review. Never publish anything directly. Only the owner approves items, and approved free items publish automatically.
+
+## For each signer, look for
+1. Whether the signer currently responds to mail requests (TTM). Note the date of any report. [FREE]
+2. Team, sport, and years played (only if changed). [FREE]
+3. Reported response times, and whether a donation or fee is required. [PAID]
+4. A public business or charity mailing address for returns, such as a team facility, charity office, or sports complex. Confirm it on Google Maps before reporting it. [PAID]
+5. Source links for every claim. [PAID]
+
+## Never do
+- Do not look up or report home addresses of individual people. For any home address, write "owner confirms directly."
+- Do not search Zillow or property records for people's homes.
+- Do not report a claim without a source link.
+- Do not guess. If you can't find a source, write "not found."
+- Do not put PAID fields in any file that the public site reads.
+
+## Output format
+For each signer, write one block in the monthly review file:
+
+## [Player name]
+- Signs by mail: yes / no / unclear (date of source) [FREE]
+- Team and sport: [only if changed] [FREE]
+- Response time reported: [time or "not found"] [PAID]
+- Donation or fee: [yes / no / not found] [PAID]
+- Business return address: [address, or "not found"] (checked on Google Maps: yes / no) [PAID]
+- Home address: owner confirms directly
+- Source: [link] [PAID]
+- Approve for the site? [ ] yes  [ ] no
+
+## Rules for the review file
+- Put everything in reviews/YYYY-MM.md, in the private repo.
+- Sort the signers into: Confirmed, Unclear, and Not found.
+- Flag any claim older than 12 months as "possibly outdated."
+- When the owner approves a signer, copy only the FREE lines to free/signers.json in the public repo. Copy the full block to paid/signers.json in the private repo.
