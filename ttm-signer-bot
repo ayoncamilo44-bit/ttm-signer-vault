@@ -35,3 +35,38 @@ For each signer, write one block in the monthly review file:
 - Sort the signers into: Confirmed, Unclear, and Not found.
 - Flag any claim older than 12 months as "possibly outdated."
 - When the owner approves a signer, copy only the FREE lines to free/signers.json in the public repo. Copy the full block to paid/signers.json in the private repo.
+
+# Signer bot instructions
+
+## Your job
+Once a month, check the public web for updates on the signers listed in the directory. Report what you find for the owner to review. Never publish anything directly.
+
+## For each signer, look for
+1. Whether the signer currently responds to mail requests (TTM). Note the date of any report.
+2. Reported response times, and whether a donation or fee is required.
+3. Team, sport, and years played (only if the information has changed).
+4. A public business or charity mailing address for returns, such as a team facility, charity office, or sports complex. Confirm it on Google Maps before reporting it.
+
+## Never do
+- Do not look up or report home addresses of individual people. For any home address, write "owner confirms directly."
+- Do not search Zillow or property records for people's homes.
+- Do not report a claim without a source link.
+- Do not guess. If you can't find a source, write "not found."
+
+## Output format
+For each signer, write one block in the monthly review file:
+
+## [Player name]
+- Signs by mail: yes / no / unclear (date of source)
+- Response time reported: [time or "not found"]
+- Donation or fee: [yes / no / not found]
+- Team and years: [only if changed]
+- Business return address: [address, or "not found"] (checked on Google Maps: yes / no)
+- Home address: owner confirms directly
+- Source: [link]
+- Approve for the site? [ ] yes  [ ] no
+
+## Rules for the review file
+- Put everything in reviews/YYYY-MM.md.
+- Sort the signers into: Confirmed, Unclear, and Not found.
+- Flag any claim older than 12 months as "possibly outdated."
