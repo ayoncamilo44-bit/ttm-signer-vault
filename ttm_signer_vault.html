@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TTM Signer Vault</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #1e293b;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="min-h-screen p-3 sm:p-6 lg:p-8">
+
+  <!-- Top Notification Container -->
+  <div id="toastContainer" class="fixed top-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+  <div class="max-w-5xl mx-auto space-y-6">
+
+    <!-- Header Section -->
+    <header class="bg-slate-800 border border-slate-700 rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <div class="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-xs font-semibold border border-emerald-500/20 mb-2">
+          <i class="fa-solid fa-stamp"></i> Standalone Collector Tool
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
+          <i class="fa-solid fa-vault text-blue-400"></i> TTM Signer Vault
+        </h1>
+        <p class="text-slate-400 text-xs sm:text-sm mt-1">
+          Verify, log, and track your Through-The-Mail autograph requests safely on any device.
+        </p>
+      </div>
+
+      <!-- Quick Action Controls -->
+      <div class="flex items-center gap-2 self-start md:self-center">
+        <button onclick="exportData()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold py-2.5 px-3.5 rounded-xl border border-slate-600 transition flex items-center gap-1.5" title="Backup your vault data">
+          <i class="fa-solid fa-download"></i> Backup JSON
+        </button>
+        <button onclick="triggerImport()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold py-2.5 px-3.5 rounded-xl border border-slate-600 transition flex items-center gap-1.5" title="Restore vault data">
+          <i class="fa-solid fa-upload"></i> Restore
+        </button>
+        <input type="file" id="importFileInput" class="hidden" accept=".json" onchange="importData(event)">
+      </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- Form Column (Add / Edit Entry) -->
+      <section class="lg:col-span-5 bg-slate-800 border border-slate-700 rounded-2xl p-5 sm:p-6 shadow-xl space-y-5 h-fit">
+        <div class="border-b border-slate-700 pb-3 flex items-center justify-between">
+          <h2 id="formHeader" class="text-lg font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-user-plus text-blue-400"></i> Log Athlete Request
+          </h2>
+          <button id="cancelEditBtn" onclick="resetForm()" class="hidden text-xs text-rose-400 hover:underline">
+            Cancel Edit
+          </button>
+        </div>
+
+        <form id="signerForm" class="space-y-4" onsubmit="handleFormSubmit(event)">
+          <input type="hidden" id="editId" value="">
+
+          <!-- Athlete Name -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">Athlete Name *</label>
+            <input type="text" id="athleteName" placeholder="e.g. John Friesz" required
+              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-sm">
+          </div>
+
+          <!-- Sport / Team & Status Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">Sport / Team</label>
+              <input type="text" id="sportTeam" placeholder="e.g. Football / Chargers"
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">Request Status</label>
+              <select id="requestStatus" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-sm">
+                <option value="Pending">Pending (Mailed)</option>
+                <option value="Returned">Success (Returned)</option>
+                <option value="RTS">RTS (Returned to Sender)</option>
+                <option value="Verified Address">Verified Address Only</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Street Address -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">Mailing Address *</label>
+            <textarea id="mailingAddress" rows="2" placeholder="e.g. 1454 E West Pebblestone Ct&#10;Hayden, ID 83835" required
+              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-sm resize-none"></textarea>
+          </div>
+
+          <!-- Date Mailed & Fee -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">Date Mailed</label>
+              <input type="date" id="dateMailed"
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">Fee / Donation ($)</label>
+              <input type="number" id="feeAmount" min="0" step="1" placeholder="0"
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-sm">
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">Notes / Items Sent</label>
+            <input type="text" id="signerNotes" placeholder="e.g. 1992 Pro Set card, $5 donation included"
+              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-sm">
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" id="submitBtn"
+            class="w-full bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all duration-150 flex items-center justify-center gap-2 text-sm">
+            <i class="fa-solid fa-floppy-disk"></i> Save Entry to Vault
+          </button>
+        </form>
+      </section>
+
+      <!-- Vault Display Column -->
+      <section class="lg:col-span-7 bg-slate-800 border border-slate-700 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4 flex flex-col justify-between">
+        
+        <div class="space-y-4">
+          <!-- Filter and Search Header -->
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-slate-700 pb-4">
+            <div class="relative flex-1">
+              <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+              <input type="text" id="searchInput" oninput="renderVault()" placeholder="Search athlete, address, or team..."
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <div class="flex items-center gap-2">
+              <select id="statusFilter" onchange="renderVault()" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="ALL">All Statuses</option>
+                <option value="Pending">Pending Only</option>
+                <option value="Returned">Successes Only</option>
+                <option value="RTS">RTS Only</option>
+                <option value="Verified Address">Verified Address Only</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Stats Bar -->
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div class="bg-slate-900 border border-slate-700/60 rounded-xl p-2.5">
+              <span class="block text-xs text-slate-400 font-semibold uppercase">Total Vault</span>
+              <span id="statTotal" class="text-base font-extrabold text-white">0</span>
+            </div>
+            <div class="bg-slate-900 border border-slate-700/60 rounded-xl p-2.5">
+              <span class="block text-xs text-amber-400/90 font-semibold uppercase">Pending</span>
+              <span id="statPending" class="text-base font-extrabold text-amber-400">0</span>
+            </div>
+            <div class="bg-slate-900 border border-slate-700/60 rounded-xl p-2.5">
+              <span class="block text-xs text-emerald-400/90 font-semibold uppercase">Successes</span>
+              <span id="statReturned" class="text-base font-extrabold text-emerald-400">0</span>
+            </div>
+          </div>
+
+          <!-- List Container -->
+          <div id="vaultList" class="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar pr-1">
+            <!-- Dynamic Records rendered here -->
+          </div>
+        </div>
+
+        <!-- Footnote Status -->
+        <div class="border-t border-slate-700/60 pt-3 flex items-center justify-between text-xs text-slate-500">
+          <span class="flex items-center gap-1.5">
+            <i class="fa-solid fa-database text-emerald-500"></i> Local Storage Active (Offline Ready)
+          </span>
+          <span id="lastUpdatedText">Updated just now</span>
+        </div>
+
+      </section>
+
+    </div>
+  </div>
+
+  <script>
+    // Storage Key
+    const STORAGE_KEY = 'TTM_SIGNER_VAULT_DATA';
+
+    // In-memory data store
+    let vaultSigners = [];
+
+    // Pre-loaded seed data if first time open
+    const defaultSeedData = [
+      {
+        id: '1',
+        name: 'John Friesz',
+        sportTeam: 'Football / Seahawks',
+        address: '1454 E West Pebblestone Ct\nHayden, ID 83835',
+        status: 'Pending',
+        dateMailed: '2026-11-01',
+        fee: 0,
+        notes: '1992 Pro Set Card',
+        created: Date.now()
+      },
+      {
+        id: '2',
+        name: 'Mike Mussina',
+        sportTeam: 'Baseball / Yankees',
+        address: '1302 Spruce St\nMontoursville, PA 17754',
+        status: 'Returned',
+        dateMailed: '2026-10-10',
+        fee: 10,
+        notes: 'Signed 1993 Topps card returned in 14 days',
+        created: Date.now() - 10000000
+      }
+    ];
+
+    // Load data on start
+    window.onload = function() {
+      loadVaultData();
+      renderVault();
+    };
+
+    function loadVaultData() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          vaultSigners = JSON.parse(stored);
+        } catch(e) {
+          vaultSigners = defaultSeedData;
+        }
+      } else {
+        vaultSigners = defaultSeedData;
+        saveVaultData();
+      }
+    }
+
+    function saveVaultData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(vaultSigners));
+      document.getElementById('lastUpdatedText').textContent = 'Last saved ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    }
+
+    // Form Submit Handler
+    function handleFormSubmit(e) {
+      e.preventDefault();
+
+      const editId = document.getElementById('editId').value;
+      const name = document.getElementById('athleteName').value.trim();
+      const sportTeam = document.getElementById('sportTeam').value.trim();
+      const status = document.getElementById('requestStatus').value;
+      const address = document.getElementById('mailingAddress').value.trim();
+      const dateMailed = document.getElementById('dateMailed').value;
+      const fee = document.getElementById('feeAmount').value || 0;
+      const notes = document.getElementById('signerNotes').value.trim();
+
+      if (editId) {
+        // Update Existing
+        const index = vaultSigners.findIndex(s => s.id === editId);
+        if (index !== -1) {
+          vaultSigners[index] = {
+            ...vaultSigners[index],
+            name, sportTeam, status, address, dateMailed, fee, notes
+          };
+          showToast('Signer updated successfully!', 'success');
+        }
+      } else {
+        // Create New
+        const newSigner = {
+          id: Date.now().toString(),
+          name,
+          sportTeam: sportTeam || 'General Sport',
+          status,
+          address,
+          dateMailed: dateMailed || new Date().toISOString().split('T')[0],
+          fee: parseFloat(fee) || 0,
+          notes,
+          created: Date.now()
+        };
+        vaultSigners.unshift(newSigner);
+        showToast('New athlete saved to vault!', 'success');
+      }
+
+      saveVaultData();
+      resetForm();
+      renderVault();
+    }
+
+    // Render Vault List
+    function renderVault() {
+      const container = document.getElementById('vaultList');
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const filter = document.getElementById('statusFilter').value;
+
+      // Filter Logic
+      const filtered = vaultSigners.filter(item => {
+        const matchesSearch = item.name.toLowerCase().includes(search) || 
+                              item.address.toLowerCase().includes(search) ||
+                              (item.sportTeam && item.sportTeam.toLowerCase().includes(search)) ||
+                              (item.notes && item.notes.toLowerCase().includes(search));
+        const matchesStatus = filter === 'ALL' || item.status === filter;
+        return matchesSearch && matchesStatus;
+      });
+
+      // Update Stats
+      document.getElementById('statTotal').textContent = vaultSigners.length;
+      document.getElementById('statPending').textContent = vaultSigners.filter(s => s.status === 'Pending').length;
+      document.getElementById('statReturned').textContent = vaultSigners.filter(s => s.status === 'Returned').length;
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-10 bg-slate-900/50 rounded-xl border border-slate-700/50">
+            <i class="fa-solid fa-folder-open text-slate-600 text-3xl mb-2"></i>
+            <p class="text-slate-400 text-sm font-medium">No matching signers found</p>
+            <p class="text-slate-600 text-xs mt-1">Try tweaking your search or add a new athlete above.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(item => {
+        let statusBadge = '';
+        if (item.status === 'Pending') {
+          statusBadge = `<span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs px-2.5 py-0.5 rounded-full font-medium flex items-center gap-1"><i class="fa-solid fa-clock text-[10px]"></i> Pending</span>`;
+        } else if (item.status === 'Returned') {
+          statusBadge = `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs px-2.5 py-0.5 rounded-full font-medium flex items-center gap-1"><i class="fa-solid fa-check text-[10px]"></i> Success</span>`;
+        } else if (item.status === 'RTS') {
+          statusBadge = `<span class="bg-rose-500/10 text-rose-400 border border-rose-500/30 text-xs px-2.5 py-0.5 rounded-full font-medium flex items-center gap-1"><i class="fa-solid fa-ban text-[10px]"></i> RTS</span>`;
+        } else {
+          statusBadge = `<span class="bg-blue-500/10 text-blue-400 border border-blue-500/30 text-xs px-2.5 py-0.5 rounded-full font-medium flex items-center gap-1"><i class="fa-solid fa-shield-halved text-[10px]"></i> Verified</span>`;
+        }
+
+        return `
+          <div class="bg-slate-900 border border-slate-700/80 rounded-xl p-4 space-y-3 hover:border-slate-600 transition">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h3 class="font-bold text-white text-base">${item.name}</h3>
+                  <span class="bg-slate-800 text-slate-300 text-xs px-2 py-0.5 rounded border border-slate-700">${item.sportTeam || 'Sport'}</span>
+                  ${statusBadge}
+                </div>
+                ${item.dateMailed ? `<p class="text-slate-500 text-xs mt-0.5"><i class="fa-regular fa-calendar"></i> Mailed: ${item.dateMailed} ${item.fee ? `• $${item.fee} Fee` : ''}</p>` : ''}
+              </div>
+
+              <div class="flex items-center gap-1">
+                <button onclick="editSigner('${item.id}')" class="text-slate-400 hover:text-blue-400 p-1.5 rounded-lg hover:bg-slate-800 transition" title="Edit Entry">
+                  <i class="fa-solid fa-pen-to-square text-xs"></i>
+                </button>
+                <button onclick="deleteSigner('${item.id}')" class="text-slate-400 hover:text-rose-400 p-1.5 rounded-lg hover:bg-slate-800 transition" title="Delete Entry">
+                  <i class="fa-solid fa-trash-can text-xs"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Address Block -->
+            <div class="bg-slate-950/60 p-2.5 rounded-lg border border-slate-800 font-mono text-xs text-slate-300 flex items-start gap-2">
+              <i class="fa-solid fa-location-dot text-slate-500 mt-0.5"></i>
+              <div class="whitespace-pre-line flex-1">${item.address}</div>
+              <button onclick="copyAddress('${encodeURIComponent(item.address)}')" class="text-slate-500 hover:text-white p-1" title="Copy Address">
+                <i class="fa-regular fa-copy"></i>
+              </button>
+            </div>
+
+            ${item.notes ? `<p class="text-xs text-slate-400 italic bg-slate-800/40 p-2 rounded border border-slate-800"><i class="fa-solid fa-note-sticky text-slate-500 mr-1"></i> ${item.notes}</p>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Edit Function
+    function editSigner(id) {
+      const item = vaultSigners.find(s => s.id === id);
+      if (!item) return;
+
+      document.getElementById('editId').value = item.id;
+      document.getElementById('athleteName').value = item.name;
+      document.getElementById('sportTeam').value = item.sportTeam || '';
+      document.getElementById('requestStatus').value = item.status;
+      document.getElementById('mailingAddress').value = item.address;
+      document.getElementById('dateMailed').value = item.dateMailed || '';
+      document.getElementById('feeAmount').value = item.fee || 0;
+      document.getElementById('signerNotes').value = item.notes || '';
+
+      document.getElementById('formHeader').innerHTML = `<i class="fa-solid fa-pen-to-square text-amber-400"></i> Edit ${item.name}`;
+      document.getElementById('submitBtn').innerHTML = `<i class="fa-solid fa-check"></i> Update Vault Entry`;
+      document.getElementById('cancelEditBtn').classList.remove('hidden');
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Reset Form State
+    function resetForm() {
+      document.getElementById('signerForm').reset();
+      document.getElementById('editId').value = '';
+      document.getElementById('formHeader').innerHTML = `<i class="fa-solid fa-user-plus text-blue-400"></i> Log Athlete Request`;
+      document.getElementById('submitBtn').innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Save Entry to Vault`;
+      document.getElementById('cancelEditBtn').classList.add('hidden');
+    }
+
+    // Delete Entry
+    function deleteSigner(id) {
+      if (confirm('Delete this athlete from your vault?')) {
+        vaultSigners = vaultSigners.filter(s => s.id !== id);
+        saveVaultData();
+        renderVault();
+        showToast('Entry deleted', 'info');
+      }
+    }
+
+    // Copy Address Utility
+    function copyAddress(encodedAddress) {
+      const text = decodeURIComponent(encodedAddress);
+      const tempInput = document.createElement('textarea');
+      tempInput.value = text;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
+      showToast('Address copied to clipboard!', 'success');
+    }
+
+    // Backup Export
+    function exportData() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(vaultSigners, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `TTM_Vault_Backup_${new Date().toISOString().split('T')[0]}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast('Backup JSON exported successfully!', 'success');
+    }
+
+    // Trigger Import
+    function triggerImport() {
+      document.getElementById('importFileInput').click();
+    }
+
+    // Restore Import
+    function importData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (Array.isArray(imported)) {
+            vaultSigners = imported;
+            saveVaultData();
+            renderVault();
+            showToast('Vault restored successfully!', 'success');
+          } else {
+            showToast('Invalid backup file format.', 'error');
+          }
+        } catch(err) {
+          showToast('Failed to parse backup file.', 'error');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // Custom Toast Notification
+    function showToast(msg, type = 'info') {
+      const toast = document.createElement('div');
+      let bgColor = 'bg-slate-800 text-slate-200 border-slate-700';
+      if (type === 'success') bgColor = 'bg-emerald-900/90 text-emerald-200 border-emerald-500/40';
+      if (type === 'error') bgColor = 'bg-rose-900/90 text-rose-200 border-rose-500/40';
+      
+      toast.className = `p-3.5 rounded-xl border ${bgColor} shadow-2xl text-xs font-semibold flex items-center gap-2 transition-all duration-300 transform translate-x-10 pointer-events-auto`;
+      toast.innerHTML = `<i class="fa-solid fa-circle-info"></i> <span>${msg}</span>`;
+      
+      const container = document.getElementById('toastContainer');
+      container.appendChild(toast);
+      
+      setTimeout(() => toast.classList.remove('translate-x-10'), 10);
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-x-10');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
