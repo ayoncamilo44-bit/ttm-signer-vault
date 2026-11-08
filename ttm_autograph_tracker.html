@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTM Autograph Request Tracker</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Custom scrollbar for Kanban & tables */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 h-full flex flex-col antialiased">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-slate-900 text-white shadow-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 p-2 rounded-lg text-white shadow-inner flex items-center justify-center">
+                    <i data-lucide="mail-check" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight">Autograph TTM Tracker</h1>
+                    <p class="text-xs text-slate-400">Through-The-Mail Collection Manager</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button onclick="openAddRequestModal()" class="inline-flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-4 py-2 rounded-lg shadow transition transform active:scale-95">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>New Request</span>
+                </button>
+                <button onclick="openAddSignerModal()" class="inline-flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-sm font-medium px-4 py-2 rounded-lg shadow transition">
+                    <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    <span>Add Signer</span>
+                </button>
+            </div>
+        </div>
+        <!-- Tabs Header -->
+        <div class="bg-slate-850 border-t border-slate-800 px-4 sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto flex space-x-6">
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="py-3 px-1 border-b-2 font-medium text-sm transition flex items-center space-x-2 border-indigo-500 text-indigo-400">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button onclick="switchTab('requests')" id="nav-requests" class="py-3 px-1 border-b-2 font-medium text-sm transition flex items-center space-x-2 border-transparent text-slate-400 hover:text-slate-200">
+                    <i data-lucide="kanban" class="w-4 h-4"></i>
+                    <span>Requests Board</span>
+                </button>
+                <button onclick="switchTab('signers')" id="nav-signers" class="py-3 px-1 border-b-2 font-medium text-sm transition flex items-center space-x-2 border-transparent text-slate-400 hover:text-slate-200">
+                    <i data-lucide="users" class="w-4 h-4"></i>
+                    <span>Signers Directory</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+
+        <!-- TAB 1: DASHBOARD -->
+        <div id="tab-dashboard" class="space-y-6">
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-slate-500">Total Requests Sent</p>
+                        <h3 id="stat-total" class="text-2xl font-bold text-slate-900 mt-1">0</h3>
+                    </div>
+                    <div class="bg-blue-50 text-blue-600 p-3 rounded-xl">
+                        <i data-lucide="send" class="w-6 h-6"></i>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-slate-500">Success Rate</p>
+                        <h3 id="stat-success-rate" class="text-2xl font-bold text-emerald-600 mt-1">0%</h3>
+                        <p id="stat-success-sub" class="text-xs text-slate-400 mt-0.5">0 signed / 0 completed</p>
+                    </div>
+                    <div class="bg-emerald-50 text-emerald-600 p-3 rounded-xl">
+                        <i data-lucide="award" class="w-6 h-6"></i>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-slate-500">Currently Active (Mailed)</p>
+                        <h3 id="stat-active" class="text-2xl font-bold text-amber-600 mt-1">0</h3>
+                    </div>
+                    <div class="bg-amber-50 text-amber-600 p-3 rounded-xl">
+                        <i data-lucide="clock" class="w-6 h-6"></i>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-slate-500">Signers Database</p>
+                        <h3 id="stat-signers" class="text-2xl font-bold text-indigo-600 mt-1">0</h3>
+                    </div>
+                    <div class="bg-indigo-50 text-indigo-600 p-3 rounded-xl">
+                        <i data-lucide="user-check" class="w-6 h-6"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Breakdown & Quick Insights -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Status Breakdown Bar/Cards -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm lg:col-span-1 space-y-4">
+                    <h2 class="text-lg font-bold text-slate-900 flex items-center space-x-2">
+                        <i data-lucide="pie-chart" class="w-5 h-5 text-indigo-600"></i>
+                        <span>Status Breakdown</span>
+                    </h2>
+                    <div class="space-y-3 pt-2">
+                        <div>
+                            <div class="flex justify-between text-sm font-medium mb-1">
+                                <span class="flex items-center space-x-2"><span class="w-3 h-3 rounded-full bg-blue-500 inline-block"></span><span>Mailed (Pending)</span></span>
+                                <span id="count-mailed">0</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-2"><div id="bar-mailed" class="bg-blue-500 h-2 rounded-full" style="width: 0%"></div></div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm font-medium mb-1">
+                                <span class="flex items-center space-x-2"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span><span>Returned Signed</span></span>
+                                <span id="count-signed">0</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-2"><div id="bar-signed" class="bg-emerald-500 h-2 rounded-full" style="width: 0%"></div></div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm font-medium mb-1">
+                                <span class="flex items-center space-x-2"><span class="w-3 h-3 rounded-full bg-orange-500 inline-block"></span><span>Returned Unsigned</span></span>
+                                <span id="count-unsigned">0</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-2"><div id="bar-unsigned" class="bg-orange-500 h-2 rounded-full" style="width: 0%"></div></div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm font-medium mb-1">
+                                <span class="flex items-center space-x-2"><span class="w-3 h-3 rounded-full bg-slate-400 inline-block"></span><span>No Response</span></span>
+                                <span id="count-noresponse">0</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-2"><div id="bar-noresponse" class="bg-slate-400 h-2 rounded-full" style="width: 0%"></div></div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm font-medium mb-1">
+                                <span class="flex items-center space-x-2"><span class="w-3 h-3 rounded-full bg-rose-500 inline-block"></span><span>Returned to Sender (RTS)</span></span>
+                                <span id="count-rts">0</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-2"><div id="bar-rts" class="bg-rose-500 h-2 rounded-full" style="width: 0%"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Feed -->
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm lg:col-span-2 flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-bold text-slate-900 flex items-center space-x-2">
+                            <i data-lucide="activity" class="w-5 h-5 text-indigo-600"></i>
+                            <span>Recent Activity & Requests</span>
+                        </h2>
+                        <button onclick="switchTab('requests')" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">View All Kanban &rarr;</button>
+                    </div>
+                    <div class="flex-1 overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead>
+                                <tr class="border-b border-slate-200 text-slate-500 font-medium">
+                                    <th class="pb-3 px-2">Signer</th>
+                                    <th class="pb-3 px-2">Item Sent</th>
+                                    <th class="pb-3 px-2">Date Mailed</th>
+                                    <th class="pb-3 px-2">Status</th>
+                                    <th class="pb-3 px-2 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-requests-tbody" class="divide-y divide-slate-100">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: REQUESTS BOARD (Kanban / Table view) -->
+        <div id="tab-requests" class="space-y-6 hidden">
+            <!-- Controls / Filters -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <div class="flex items-center space-x-3 w-full sm:w-auto">
+                    <div class="relative flex-1 sm:w-64">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                        </span>
+                        <input type="text" id="request-search" oninput="renderRequestsView()" placeholder="Search item or signer..." class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <select id="request-filter-status" onchange="renderRequestsView()" class="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="">All Statuses</option>
+                        <option value="mailed">Mailed</option>
+                        <option value="returned_signed">Returned Signed</option>
+                        <option value="returned_unsigned">Returned Unsigned</option>
+                        <option value="no_response">No Response</option>
+                        <option value="rts">RTS</option>
+                    </select>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="bg-slate-100 p-1 rounded-lg flex space-x-1">
+                        <button onclick="setRequestViewMode('kanban')" id="view-btn-kanban" class="px-3 py-1.5 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-sm transition">Kanban</button>
+                        <button onclick="setRequestViewMode('table')" id="view-btn-table" class="px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition">Table</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kanban Container -->
+            <div id="requests-kanban-container" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-start">
+                <!-- Columns generated by JS: Mailed, Returned Signed, Returned Unsigned, No Response, RTS -->
+            </div>
+
+            <!-- Table Container -->
+            <div id="requests-table-container" class="hidden bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+                            <tr>
+                                <th class="p-3.5">Signer</th>
+                                <th class="p-3.5">Sport</th>
+                                <th class="p-3.5">Item Sent</th>
+                                <th class="p-3.5">Date Mailed</th>
+                                <th class="p-3.5">Status</th>
+                                <th class="p-3.5">Date Returned</th>
+                                <th class="p-3.5">Notes</th>
+                                <th class="p-3.5 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requests-table-tbody" class="divide-y divide-slate-100">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: SIGNERS DIRECTORY -->
+        <div id="tab-signers" class="space-y-6 hidden">
+            <!-- Controls / Filters -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <div class="flex items-center space-x-3 w-full sm:w-auto">
+                    <div class="relative flex-1 sm:w-72">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                        </span>
+                        <input type="text" id="signer-search" oninput="renderSignersList()" placeholder="Search signer name, team..." class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <select id="signer-filter-sport" onchange="renderSignersList()" class="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="">All Sports</option>
+                        <option value="Baseball">Baseball</option>
+                        <option value="Basketball">Basketball</option>
+                        <option value="Football">Football</option>
+                        <option value="Hockey">Hockey</option>
+                        <option value="Soccer">Soccer</option>
+                        <option value="Racing">Racing</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <button onclick="openAddSignerModal()" class="inline-flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-4 py-2 rounded-lg shadow transition">
+                    <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    <span>Add New Signer</span>
+                </button>
+            </div>
+
+            <!-- Signers Grid -->
+            <div id="signers-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODAL: ADD / EDIT SIGNER -->
+    <div id="modal-signer" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all">
+            <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+                <h3 id="modal-signer-title" class="text-lg font-bold">Add New Signer</h3>
+                <button onclick="closeModal('modal-signer')" class="text-slate-400 hover:text-white p-1 rounded-lg"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-signer" onsubmit="handleSaveSigner(event)" class="p-6 space-y-4">
+                <input type="hidden" id="signer-id">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Signer Full Name *</label>
+                    <input type="text" id="signer-name" required placeholder="e.g. Ken Griffey Jr." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Sport *</label>
+                        <select id="signer-sport" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <option value="Baseball">Baseball</option>
+                            <option value="Basketball">Basketball</option>
+                            <option value="Football">Football</option>
+                            <option value="Hockey">Hockey</option>
+                            <option value="Soccer">Soccer</option>
+                            <option value="Racing">Racing</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Team / Era</label>
+                        <input type="text" id="signer-team" placeholder="e.g. Seattle Mariners / 90s" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Current Mailing Address *</label>
+                    <textarea id="signer-address" required rows="3" placeholder="c/o Team Stadium, Street Address, City, State ZIP" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+                    <p class="text-xs text-slate-500 mt-1">If editing, updating this address will automatically record it to the address history timeline.</p>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('modal-signer')" class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-medium shadow">Save Signer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD / EDIT REQUEST -->
+    <div id="modal-request" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all">
+            <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+                <h3 id="modal-request-title" class="text-lg font-bold">New TTM Request</h3>
+                <button onclick="closeModal('modal-request')" class="text-slate-400 hover:text-white p-1 rounded-lg"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-request" onsubmit="handleSaveRequest(event)" class="p-6 space-y-4">
+                <input type="hidden" id="request-id">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Signer *</label>
+                    <div class="flex space-x-2">
+                        <select id="request-signer-id" required class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <!-- Populated by JS -->
+                        </select>
+                        <button type="button" onclick="openAddSignerModal()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg" title="Quick Add Signer">+</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Date Mailed *</label>
+                        <input type="date" id="request-date-mailed" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Status *</label>
+                        <select id="request-status" onchange="toggleDateReturnedField()" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <option value="mailed">Mailed (Pending)</option>
+                            <option value="returned_signed">Returned Signed</option>
+                            <option value="returned_unsigned">Returned Unsigned</option>
+                            <option value="no_response">No Response</option>
+                            <option value="rts">Returned to Sender (RTS)</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="container-date-returned" class="hidden">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Date Returned</label>
+                    <input type="date" id="request-date-returned" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Item Sent *</label>
+                    <input type="text" id="request-item" required placeholder="e.g. 1989 Topps Baseball Card, 8x10 Photo" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Notes / Fee / Details</label>
+                    <textarea id="request-notes" rows="2" placeholder="e.g. Included $5 fee, SASE included, sent via First Class." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('modal-request')" class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-medium shadow">Save Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: SIGNER DETAILS & ADDRESS HISTORY -->
+    <div id="modal-signer-detail" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden transform transition-all">
+            <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div id="detail-signer-sport-badge" class="bg-indigo-600 text-xs uppercase px-2.5 py-1 rounded-md font-semibold tracking-wider">Sport</div>
+                    <h3 id="detail-signer-name" class="text-lg font-bold">Signer Name</h3>
+                </div>
+                <button onclick="closeModal('modal-signer-detail')" class="text-slate-400 hover:text-white p-1 rounded-lg"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+                <!-- Current Address Box -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Current Mailing Address</span>
+                        <span id="detail-signer-team" class="text-xs font-medium text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full">Team</span>
+                    </div>
+                    <p id="detail-signer-address" class="text-sm font-medium text-slate-900 whitespace-pre-line"></p>
+                </div>
+
+                <!-- Address History Timeline -->
+                <div>
+                    <h4 class="text-sm font-bold text-slate-900 mb-3 flex items-center space-x-2">
+                        <i data-lucide="history" class="w-4 h-4 text-indigo-600"></i>
+                        <span>Address History Timeline</span>
+                    </h4>
+                    <div id="detail-address-history-list" class="space-y-3">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Associated Requests -->
+                <div>
+                    <h4 class="text-sm font-bold text-slate-900 mb-3 flex items-center space-x-2">
+                        <i data-lucide="mail" class="w-4 h-4 text-indigo-600"></i>
+                        <span>TTM Requests for this Signer</span>
+                    </h4>
+                    <div class="border border-slate-200 rounded-xl overflow-hidden">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+                                <tr>
+                                    <th class="p-2.5">Item</th>
+                                    <th class="p-2.5">Mailed</th>
+                                    <th class="p-2.5">Status</th>
+                                    <th class="p-2.5">Returned</th>
+                                </tr>
+                            </thead>
+                            <tbody id="detail-signer-requests-tbody" class="divide-y divide-slate-100">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-50 px-6 py-3 border-t border-slate-200 flex justify-between items-center">
+                <button onclick="editSignerFromDetail()" class="text-sm text-indigo-600 hover:text-indigo-800 font-semibold flex items-center space-x-1">
+                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                    <span>Edit Signer Details</span>
+                </button>
+                <button onclick="closeModal('modal-signer-detail')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-medium">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION TOAST -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center space-x-3">
+        <i id="toast-icon" data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i>
+        <span id="toast-msg" class="text-sm font-medium">Action completed successfully</span>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        // --- Data Store & Persistence ---
+        let db = {
+            signers: [],
+            requests: []
+        };
+
+        const STORAGE_KEY = 'ttm_autograph_tracker_db_v1';
+
+        // Initial mock data if empty
+        const initialMockSigners = [
+            {
+                signerId: 'signer_1',
+                name: 'Cal Ripken Jr.',
+                sport: 'Baseball',
+                teamEra: 'Baltimore Orioles / HOF',
+                currentAddress: 'c/o Ripken Baseball, 876 Ridgely Rd, Timonium, MD 21093',
+                addressHistory: [
+                    { address: 'c/o Ripken Baseball, 876 Ridgely Rd, Timonium, MD 21093', dateUpdated: '2024-01-15' },
+                    { address: 'Orioles Fan Mail, Camden Yards, Baltimore, MD 21201', dateUpdated: '2022-05-10' }
+                ]
+            },
+            {
+                signerId: 'signer_2',
+                name: 'Jerry West',
+                sport: 'Basketball',
+                teamEra: 'Los Angeles Lakers / HOF',
+                currentAddress: 'c/o LA Clippers Office, 1200 S Figueroa St, Los Angeles, CA 90015',
+                addressHistory: [
+                    { address: 'c/o LA Clippers Office, 1200 S Figueroa St, Los Angeles, CA 90015', dateUpdated: '2023-11-01' }
+                ]
+            },
+            {
+                signerId: 'signer_3',
+                name: 'Joe Montana',
+                sport: 'Football',
+                teamEra: 'San Francisco 49ers / HOF',
+                currentAddress: 'c/o Montana Enterprise, 100 Pine St, San Francisco, CA 94111',
+                addressHistory: [
+                    { address: 'c/o Montana Enterprise, 100 Pine St, San Francisco, CA 94111', dateUpdated: '2023-08-20' }
+                ]
+            },
+            {
+                signerId: 'signer_4',
+                name: 'Bobby Orr',
+                sport: 'Hockey',
+                teamEra: 'Boston Bruins / HOF',
+                currentAddress: 'c/o Orr Hockey Group, 100 High St, Boston, MA 02110',
+                addressHistory: [
+                    { address: 'c/o Orr Hockey Group, 100 High St, Boston, MA 02110', dateUpdated: '2023-03-12' }
+                ]
+            },
+            {
+                signerId: 'signer_5',
+                name: 'Nolan Ryan',
+                sport: 'Baseball',
+                teamEra: 'Texas Rangers / HOF',
+                currentAddress: 'c/o Ryan Ranch, PO Box 1234, Alvin, TX 77511',
+                addressHistory: [
+                    { address: 'c/o Ryan Ranch, PO Box 1234, Alvin, TX 77511', dateUpdated: '2024-02-01' }
+                ]
+            }
+        ];
+
+        const initialMockRequests = [
+            {
+                requestId: 'req_1',
+                signerId: 'signer_1',
+                dateMailed: '2026-02-10',
+                itemSent: '1992 Topps Baseball Card',
+                status: 'returned_signed',
+                dateReturned: '2026-03-04',
+                notes: 'Included $10 donation to Ripken Foundation. Signed in blue sharpie!'
+            },
+            {
+                requestId: 'req_2',
+                signerId: 'signer_2',
+                dateMailed: '2026-01-15',
+                itemSent: '1975 Topps Basketball Card',
+                status: 'returned_signed',
+                dateReturned: '2026-02-02',
+                notes: 'Fast return, beautiful signature.'
+            },
+            {
+                requestId: 'req_3',
+                signerId: 'signer_3',
+                dateMailed: '2026-02-20',
+                itemSent: '1989 Pro Set Football Card',
+                status: 'mailed',
+                dateReturned: null,
+                notes: 'Sent with SASE and trading card protector.'
+            },
+            {
+                requestId: 'req_4',
+                signerId: 'signer_4',
+                dateMailed: '2025-11-10',
+                itemSent: '1972 Topps Hockey Card',
+                status: 'no_response',
+                dateReturned: null,
+                notes: 'Over 90 days with no reply.'
+            },
+            {
+                requestId: 'req_5',
+                signerId: 'signer_5',
+                dateMailed: '2026-02-01',
+                itemSent: '1985 Donruss Card',
+                status: 'returned_unsigned',
+                dateReturned: '2026-02-25',
+                notes: 'Returned with printed autograph postcard.'
+            }
+        ];
+
+        function loadData() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    db = JSON.parse(saved);
+                } catch (e) {
+                    console.error('Failed to parse storage, reloading defaults', e);
+                    db = { signers: initialMockSigners, requests: initialMockRequests };
+                }
+            } else {
+                db = { signers: initialMockSigners, requests: initialMockRequests };
+                saveData();
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+        }
+
+        // --- Navigation Tabs ---
+        let currentViewMode = 'kanban'; // 'kanban' or 'table' for requests
+
+        function switchTab(tabId) {
+            ['dashboard', 'requests', 'signers'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                const btn = document.getElementById(`nav-${t}`);
+                btn.className = 'py-3 px-1 border-b-2 font-medium text-sm transition flex items-center space-x-2 border-transparent text-slate-400 hover:text-slate-200';
+            });
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            activeBtn.className = 'py-3 px-1 border-b-2 font-medium text-sm transition flex items-center space-x-2 border-indigo-500 text-indigo-400';
+
+            // Render view contents
+            if (tabId === 'dashboard') renderDashboard();
+            if (tabId === 'requests') renderRequestsView();
+            if (tabId === 'signers') renderSignersList();
+
+            lucide.createIcons();
+        }
+
+        // --- Dashboard Rendering ---
+        function renderDashboard() {
+            const total = db.requests.length;
+            const signed = db.requests.filter(r => r.status === 'returned_signed').length;
+            const unsigned = db.requests.filter(r => r.status === 'returned_unsigned').length;
+            const noResponse = db.requests.filter(r => r.status === 'no_response').length;
+            const rts = db.requests.filter(r => r.status === 'rts').length;
+            const mailed = db.requests.filter(r => r.status === 'mailed').length;
+
+            const completedCount = signed + unsigned + rts + noResponse;
+            const successRate = completedCount > 0 ? Math.round((signed / (signed + unsigned + noResponse)) * 100) : 0;
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-success-rate').innerText = successRate + '%';
+            document.getElementById('stat-success-sub').innerText = `${signed} signed / ${signed + unsigned + noResponse} resolved`;
+            document.getElementById('stat-active').innerText = mailed;
+            document.getElementById('stat-signers').innerText = db.signers.length;
+
+            // Status counts & progress bars
+            document.getElementById('count-mailed').innerText = mailed;
+            document.getElementById('bar-mailed').style.width = total ? `${(mailed / total) * 100}%` : '0%';
+
+            document.getElementById('count-signed').innerText = signed;
+            document.getElementById('bar-signed').style.width = total ? `${(signed / total) * 100}%` : '0%';
+
+            document.getElementById('count-unsigned').innerText = unsigned;
+            document.getElementById('bar-unsigned').style.width = total ? `${(unsigned / total) * 100}%` : '0%';
+
+            document.getElementById('count-noresponse').innerText = noResponse;
+            document.getElementById('bar-noresponse').style.width = total ? `${(noResponse / total) * 100}%` : '0%';
+
+            document.getElementById('count-rts').innerText = rts;
+            document.getElementById('bar-rts').style.width = total ? `${(rts / total) * 100}%` : '0%';
+
+            // Recent activity table (top 5 requests sorted by dateMailed desc)
+            const sorted = [...db.requests].sort((a,b) => new Date(b.dateMailed) - new Date(a.dateMailed)).slice(0, 5);
+            const tbody = document.getElementById('recent-requests-tbody');
+            tbody.innerHTML = '';
+
+            if (sorted.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-400">No requests recorded yet.</td></tr>`;
+                return;
+            }
+
+            sorted.forEach(req => {
+                const signer = db.signers.find(s => s.signerId === req.signerId) || { name: 'Unknown Signer' };
+                const badge = getStatusBadge(req.status);
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3 px-2 font-medium text-slate-900">${escapeHtml(signer.name)}</td>
+                        <td class="py-3 px-2 text-slate-600">${escapeHtml(req.itemSent)}</td>
+                        <td class="py-3 px-2 text-slate-500">${formatDate(req.dateMailed)}</td>
+                        <td class="py-3 px-2">${badge}</td>
+                        <td class="py-3 px-2 text-right">
+                            <button onclick="openEditRequestModal('${req.requestId}')" class="text-indigo-600 hover:text-indigo-900 font-medium text-xs bg-indigo-50 px-2.5 py-1 rounded-md">Edit</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // --- Requests Board / Table Rendering ---
+        function setRequestViewMode(mode) {
+            currentViewMode = mode;
+            if (mode === 'kanban') {
+                document.getElementById('view-btn-kanban').className = 'px-3 py-1.5 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-sm transition';
+                document.getElementById('view-btn-table').className = 'px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition';
+                document.getElementById('requests-kanban-container').classList.remove('hidden');
+                document.getElementById('requests-table-container').classList.add('hidden');
+            } else {
+                document.getElementById('view-btn-table').className = 'px-3 py-1.5 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-sm transition';
+                document.getElementById('view-btn-kanban').className = 'px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 transition';
+                document.getElementById('requests-table-container').classList.remove('hidden');
+                document.getElementById('requests-kanban-container').classList.add('hidden');
+            }
+            renderRequestsView();
+        }
+
+        function renderRequestsView() {
+            const query = document.getElementById('request-search').value.toLowerCase();
+            const filterStatus = document.getElementById('request-filter-status').value;
+
+            let filtered = db.requests.filter(req => {
+                const signer = db.signers.find(s => s.signerId === req.signerId) || { name: '', sport: '' };
+                const matchQuery = signer.name.toLowerCase().includes(query) || req.itemSent.toLowerCase().includes(query) || (req.notes && req.notes.toLowerCase().includes(query));
+                const matchStatus = filterStatus ? req.status === filterStatus : true;
+                return matchQuery && matchStatus;
+            });
+
+            if (currentViewMode === 'kanban') {
+                renderKanbanBoard(filtered);
+            } else {
+                renderRequestsTable(filtered);
+            }
+            lucide.createIcons();
+        }
+
+        function renderKanbanBoard(requests) {
+            const columns = [
+                { id: 'mailed', title: 'Mailed (Pending)', color: 'border-blue-200 bg-blue-50/50', headerColor: 'text-blue-700 bg-blue-100' },
+                { id: 'returned_signed', title: 'Returned Signed', color: 'border-emerald-200 bg-emerald-50/50', headerColor: 'text-emerald-700 bg-emerald-100' },
+                { id: 'returned_unsigned', title: 'Returned Unsigned', color: 'border-orange-200 bg-orange-50/50', headerColor: 'text-orange-700 bg-orange-100' },
+                { id: 'no_response', title: 'No Response', color: 'border-slate-200 bg-slate-100/50', headerColor: 'text-slate-700 bg-slate-200' },
+                { id: 'rts', title: 'Returned to Sender', color: 'border-rose-200 bg-rose-50/50', headerColor: 'text-rose-700 bg-rose-100' }
+            ];
+
+            const container = document.getElementById('requests-kanban-container');
+            container.innerHTML = '';
+
+            columns.forEach(col => {
+                const colRequests = requests.filter(r => r.status === col.id);
+                let cardsHtml = '';
+
+                if (colRequests.length === 0) {
+                    cardsHtml = `<div class="p-4 text-center text-xs text-slate-400 italic bg-white rounded-lg border border-dashed border-slate-200">No requests</div>`;
+                } else {
+                    colRequests.forEach(req => {
+                        const signer = db.signers.find(s => s.signerId === req.signerId) || { name: 'Unknown', sport: 'Other' };
+                        cardsHtml += `
+                            <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm space-y-2 hover:shadow-md transition">
+                                <div class="flex items-start justify-between">
+                                    <div>
+                                        <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">${escapeHtml(signer.sport)}</span>
+                                        <h4 class="font-bold text-slate-900 text-sm mt-1">${escapeHtml(signer.name)}</h4>
+                                    </div>
+                                    <div class="flex space-x-1">
+                                        <button onclick="openEditRequestModal('${req.requestId}')" class="text-slate-400 hover:text-indigo-600 p-1" title="Edit"><i data-lucide="edit-2" class="w-3.5 h-3.5"></i></button>
+                                        <button onclick="deleteRequest('${req.requestId}')" class="text-slate-400 hover:text-rose-600 p-1" title="Delete"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                                    </div>
+                                </div>
+                                <p class="text-xs font-medium text-slate-700"><span class="text-slate-400">Item:</span> ${escapeHtml(req.itemSent)}</p>
+                                <div class="flex justify-between items-center text-[11px] text-slate-500 pt-1 border-t border-slate-100">
+                                    <span>Mailed: ${formatDate(req.dateMailed)}</span>
+                                    ${req.dateReturned ? `<span class="text-emerald-600 font-medium">Ret: ${formatDate(req.dateReturned)}</span>` : ''}
+                                </div>
+                                ${req.notes ? `<p class="text-[11px] text-slate-500 italic bg-slate-50 p-1.5 rounded">${escapeHtml(req.notes)}</p>` : ''}
+                                <!-- Quick Status Switcher buttons -->
+                                <div class="flex flex-wrap gap-1 pt-1">
+                                    ${req.status !== 'returned_signed' ? `<button onclick="quickUpdateStatus('${req.requestId}', 'returned_signed')" class="text-[10px] bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-2 py-0.5 rounded font-medium">Mark Signed</button>` : ''}
+                                    ${req.status !== 'mailed' ? `<button onclick="quickUpdateStatus('${req.requestId}', 'mailed')" class="text-[10px] bg-blue-50 text-blue-700 hover:bg-blue-100 px-2 py-0.5 rounded font-medium">Mailed</button>` : ''}
+                                    ${req.status !== 'no_response' ? `<button onclick="quickUpdateStatus('${req.requestId}', 'no_response')" class="text-[10px] bg-slate-100 text-slate-700 hover:bg-slate-200 px-2 py-0.5 rounded font-medium">No Reply</button>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
+                container.innerHTML += `
+                    <div class="flex flex-col rounded-xl border ${col.color} p-3 space-y-3 min-h-[450px]">
+                        <div class="flex items-center justify-between px-1 py-1.5 rounded-lg ${col.headerColor}">
+                            <span class="text-xs font-bold uppercase tracking-wider px-1">${col.title}</span>
+                            <span class="text-xs font-bold px-2 py-0.5 bg-white rounded-full shadow-xs">${colRequests.length}</span>
+                        </div>
+                        <div class="flex-1 space-y-3">
+                            ${cardsHtml}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderRequestsTable(requests) {
+            const tbody = document.getElementById('requests-table-tbody');
+            tbody.innerHTML = '';
+
+            if (requests.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="py-6 text-center text-slate-400">No requests found matching filters.</td></tr>`;
+                return;
+            }
+
+            requests.forEach(req => {
+                const signer = db.signers.find(s => s.signerId === req.signerId) || { name: 'Unknown', sport: 'Other' };
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-3.5 font-medium text-slate-900">${escapeHtml(signer.name)}</td>
+                        <td class="p-3.5"><span class="text-xs bg-slate-100 px-2 py-1 rounded font-medium text-slate-700">${escapeHtml(signer.sport)}</span></td>
+                        <td class="p-3.5 text-slate-700">${escapeHtml(req.itemSent)}</td>
+                        <td class="p-3.5 text-slate-500">${formatDate(req.dateMailed)}</td>
+                        <td class="p-3.5">${getStatusBadge(req.status)}</td>
+                        <td class="p-3.5 text-slate-500">${req.dateReturned ? formatDate(req.dateReturned) : '-'}</td>
+                        <td class="p-3.5 text-slate-500 max-w-xs truncate">${escapeHtml(req.notes || '')}</td>
+                        <td class="p-3.5 text-right space-x-2">
+                            <button onclick="openEditRequestModal('${req.requestId}')" class="text-indigo-600 hover:text-indigo-900 font-medium text-xs bg-indigo-50 px-2.5 py-1 rounded-md">Edit</button>
+                            <button onclick="deleteRequest('${req.requestId}')" class="text-rose-600 hover:text-rose-900 font-medium text-xs bg-rose-50 px-2.5 py-1 rounded-md">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // --- Signers Directory Rendering ---
+        function renderSignersList() {
+            const query = document.getElementById('signer-search').value.toLowerCase();
+            const filterSport = document.getElementById('signer-filter-sport').value;
+
+            let filtered = db.signers.filter(signer => {
+                const matchQuery = signer.name.toLowerCase().includes(query) || (signer['team/era'] && signer['team/era'].toLowerCase().includes(query)) || signer.currentAddress.toLowerCase().includes(query);
+                const matchSport = filterSport ? signer.sport === filterSport : true;
+                return matchQuery && matchSport;
+            });
+
+            const grid = document.getElementById('signers-grid');
+            grid.innerHTML = '';
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400 bg-white rounded-xl border border-slate-200">No signers found matching your search.</div>`;
+                return;
+            }
+
+            filtered.forEach(signer => {
+                const signerRequests = db.requests.filter(r => r.signerId === signer.signerId);
+                const signedCount = signerRequests.filter(r => r.status === 'returned_signed').length;
+
+                grid.innerHTML += `
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition p-5 flex flex-col justify-between space-y-4">
+                        <div>
+                            <div class="flex items-start justify-between">
+                                <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md">${escapeHtml(signer.sport)}</span>
+                                <div class="flex space-x-1">
+                                    <button onclick="openSignerDetailModal('${signer.signerId}')" class="text-slate-400 hover:text-indigo-600 p-1" title="View Timeline"><i data-lucide="eye" class="w-4 h-4"></i></button>
+                                    <button onclick="openEditSignerModal('${signer.signerId}')" class="text-slate-400 hover:text-indigo-600 p-1" title="Edit Signer"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                                    <button onclick="deleteSigner('${signer.signerId}')" class="text-slate-400 hover:text-rose-600 p-1" title="Delete Signer"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                </div>
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-900 mt-2">${escapeHtml(signer.name)}</h3>
+                            ${signer['team/era'] ? `<p class="text-xs font-medium text-slate-500">${escapeHtml(signer['team/era'])}</p>` : ''}
+                            
+                            <div class="mt-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                <p class="text-xs text-slate-500 font-semibold mb-1 uppercase tracking-wider">Current Address:</p>
+                                <p class="text-xs text-slate-700 whitespace-pre-line">${escapeHtml(signer.currentAddress)}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-3 border-t border-slate-100 text-xs text-slate-500">
+                            <span>Requests: <strong class="text-slate-900">${signerRequests.length}</strong></span>
+                            <span>Success: <strong class="text-emerald-600">${signedCount} signed</strong></span>
+                            <button onclick="openAddRequestModalForSigner('${signer.signerId}')" class="text-indigo-600 hover:text-indigo-800 font-semibold flex items-center space-x-1">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i><span>New Req</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            lucide.createIcons();
+        }
+
+        // --- Modals & CRUD Operations ---
+        function openAddSignerModal() {
+            document.getElementById('modal-signer-title').innerText = 'Add New Signer';
+            document.getElementById('signer-id').value = '';
+            document.getElementById('signer-name').value = '';
+            document.getElementById('signer-sport').value = 'Baseball';
+            document.getElementById('signer-team').value = '';
+            document.getElementById('signer-address').value = '';
+            document.getElementById('modal-signer').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function openEditSignerModal(signerId) {
+            const signer = db.signers.find(s => s.signerId === signerId);
+            if (!signer) return;
+            document.getElementById('modal-signer-title').innerText = 'Edit Signer';
+            document.getElementById('signer-id').value = signer.signerId;
+            document.getElementById('signer-name').value = signer.name;
+            document.getElementById('signer-sport').value = signer.sport;
+            document.getElementById('signer-team').value = signer['team/era'] || '';
+            document.getElementById('signer-address').value = signer.currentAddress;
+            document.getElementById('modal-signer').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function handleSaveSigner(event) {
+            event.preventDefault();
+            const id = document.getElementById('signer-id').value;
+            const name = document.getElementById('signer-name').value.trim();
+            const sport = document.getElementById('signer-sport').value;
+            const teamEra = document.getElementById('signer-team').value.trim();
+            const address = document.getElementById('signer-address').value.trim();
+            const today = new Date().toISOString().split('T')[0];
+
+            if (id) {
+                // Edit existing
+                const signer = db.signers.find(s => s.signerId === id);
+                if (signer) {
+                    signer.name = name;
+                    signer.sport = sport;
+                    signer.teamEra = teamEra;
+                    if (signer.currentAddress !== address) {
+                        // Address changed, add to history
+                        if (!signer.addressHistory) signer.addressHistory = [];
+                        signer.addressHistory.unshift({ address: address, dateUpdated: today });
+                        signer.currentAddress = address;
+                    }
+                }
+                showToast('Signer updated successfully');
+            } else {
+                // Create new
+                const newSigner = {
+                    signerId: 'signer_' + Date.now(),
+                    name: name,
+                    sport: sport,
+                    teamEra: teamEra,
+                    currentAddress: address,
+                    addressHistory: [
+                        { address: address, dateUpdated: today }
+                    ]
+                };
+                db.signers.push(newSigner);
+                showToast('New signer added successfully');
+            }
+
+            saveData();
+            closeModal('modal-signer');
+            renderSignersList();
+            renderDashboard();
+        }
+
+        function deleteSigner(signerId) {
+            if (!confirm('Are you sure you want to delete this signer? Associated requests will also be removed.')) return;
+            db.signers = db.signers.filter(s => s.signerId !== signerId);
+            db.requests = db.requests.filter(r => r.signerId !== signerId);
+            saveData();
+            renderSignersList();
+            renderDashboard();
+            showToast('Signer deleted');
+        }
+
+        // --- Request Modals & CRUD ---
+        function populateSignerDropdown(selectedId = '') {
+            const select = document.getElementById('request-signer-id');
+            select.innerHTML = '';
+            if (db.signers.length === 0) {
+                select.innerHTML = `<option value="">No signers available. Add one first!</option>`;
+                return;
+            }
+            db.signers.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.signerId;
+                opt.textContent = `${s.name} (${s.sport})`;
+                if (s.signerId === selectedId) opt.selected = true;
+                select.appendChild(opt);
+            });
+        }
+
+        function openAddRequestModal() {
+            document.getElementById('modal-request-title').innerText = 'New TTM Request';
+            document.getElementById('request-id').value = '';
+            populateSignerDropdown();
+            document.getElementById('request-date-mailed').value = new Date().toISOString().split('T')[0];
+            document.getElementById('request-status').value = 'mailed';
+            document.getElementById('request-date-returned').value = '';
+            document.getElementById('request-item').value = '';
+            document.getElementById('request-notes').value = '';
+            toggleDateReturnedField();
+            document.getElementById('modal-request').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function openAddRequestModalForSigner(signerId) {
+            openAddRequestModal();
+            populateSignerDropdown(signerId);
+        }
+
+        function openEditRequestModal(requestId) {
+            const req = db.requests.find(r => r.requestId === requestId);
+            if (!req) return;
+            document.getElementById('modal-request-title').innerText = 'Edit TTM Request';
+            document.getElementById('request-id').value = req.requestId;
+            populateSignerDropdown(req.signerId);
+            document.getElementById('request-date-mailed').value = req.dateMailed;
+            document.getElementById('request-status').value = req.status;
+            document.getElementById('request-date-returned').value = req.dateReturned || '';
+            document.getElementById('request-item').value = req.itemSent;
+            document.getElementById('request-notes').value = req.notes || '';
+            toggleDateReturnedField();
+            document.getElementById('modal-request').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function toggleDateReturnedField() {
+            const status = document.getElementById('request-status').value;
+            const container = document.getElementById('container-date-returned');
+            const dateReturnedInput = document.getElementById('request-date-returned');
+            if (status === 'returned_signed' || status === 'returned_unsigned') {
+                container.classList.remove('hidden');
+                if (!dateReturnedInput.value) {
+                    dateReturnedInput.value = new Date().toISOString().split('T')[0];
+                }
+            } else {
+                container.classList.add('hidden');
+                dateReturnedInput.value = '';
+            }
+        }
+
+        function handleSaveRequest(event) {
+            event.preventDefault();
+            const id = document.getElementById('request-id').value;
+            const signerId = document.getElementById('request-signer-id').value;
+            const dateMailed = document.getElementById('request-date-mailed').value;
+            const status = document.getElementById('request-status').value;
+            const dateReturned = document.getElementById('request-date-returned').value || null;
+            const itemSent = document.getElementById('request-item').value.trim();
+            const notes = document.getElementById('request-notes').value.trim();
+
+            if (id) {
+                const req = db.requests.find(r => r.requestId === id);
+                if (req) {
+                    req.signerId = signerId;
+                    req.dateMailed = dateMailed;
+                    req.status = status;
+                    req.dateReturned = (status === 'returned_signed' || status === 'returned_unsigned') ? dateReturned : null;
+                    req.itemSent = itemSent;
+                    req.notes = notes;
+                }
+                showToast('Request updated successfully');
+            } else {
+                const newReq = {
+                    requestId: 'req_' + Date.now(),
+                    signerId: signerId,
+                    dateMailed: dateMailed,
+                    itemSent: itemSent,
+                    status: status,
+                    dateReturned: (status === 'returned_signed' || status === 'returned_unsigned') ? dateReturned : null,
+                    notes: notes
+                };
+                db.requests.push(newReq);
+                showToast('New TTM request added successfully');
+            }
+
+            saveData();
+            closeModal('modal-request');
+            renderDashboard();
+            if (!document.getElementById('tab-requests').classList.contains('hidden')) {
+                renderRequestsView();
+            }
+        }
+
+        function quickUpdateStatus(requestId, newStatus) {
+            const req = db.requests.find(r => r.requestId === requestId);
+            if (!req) return;
+            req.status = newStatus;
+            if (newStatus === 'returned_signed' || newStatus === 'returned_unsigned') {
+                if (!req.dateReturned) {
+                    req.dateReturned = new Date().toISOString().split('T')[0];
+                }
+            } else {
+                req.dateReturned = null;
+            }
+            saveData();
+            renderDashboard();
+            if (!document.getElementById('tab-requests').classList.contains('hidden')) {
+                renderRequestsView();
+            }
+            showToast(`Status updated to ${formatStatusName(newStatus)}`);
+        }
+
+        function deleteRequest(requestId) {
+            if (!confirm('Are you sure you want to delete this request?')) return;
+            db.requests = db.requests.filter(r => r.requestId !== requestId);
+            saveData();
+            renderDashboard();
+            if (!document.getElementById('tab-requests').classList.contains('hidden')) {
+                renderRequestsView();
+            }
+            showToast('Request deleted');
+        }
+
+        // --- Signer Detail Timeline Modal ---
+        let activeDetailSignerId = null;
+
+        function openSignerDetailModal(signerId) {
+            activeDetailSignerId = signerId;
+            const signer = db.signers.find(s => s.signerId === signerId);
+            if (!signer) return;
+
+            document.getElementById('detail-signer-name').innerText = signer.name;
+            document.getElementById('detail-signer-sport-badge').innerText = signer.sport;
+            document.getElementById('detail-signer-team').innerText = signer.teamEra || signer.sport;
+            document.getElementById('detail-signer-address').innerText = signer.currentAddress;
+
+            // Render Address History
+            const historyList = document.getElementById('detail-address-history-list');
+            historyList.innerHTML = '';
+            const history = signer.addressHistory || [{ address: signer.currentAddress, dateUpdated: 'Original' }];
+            history.forEach((h, index) => {
+                historyList.innerHTML += `
+                    <div class="flex items-start space-x-3 text-xs bg-slate-50 p-3 rounded-lg border border-slate-200">
+                        <div class="bg-indigo-600 text-white w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">${history.length - index}</div>
+                        <div class="flex-1">
+                            <p class="font-medium text-slate-800 whitespace-pre-line">${escapeHtml(h.address)}</p>
+                            <p class="text-slate-400 mt-1">Recorded on: ${h.dateUpdated}</p>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Render Signer Requests
+            const reqTbody = document.getElementById('detail-signer-requests-tbody');
+            reqTbody.innerHTML = '';
+            const signerReqs = db.requests.filter(r => r.signerId === signerId);
+
+            if (signerReqs.length === 0) {
+                reqTbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-400">No requests for this signer yet.</td></tr>`;
+            } else {
+                signerReqs.forEach(req => {
+                    reqTbody.innerHTML += `
+                        <tr>
+                            <td class="p-2.5 font-medium text-slate-800">${escapeHtml(req.itemSent)}</td>
+                            <td class="p-2.5 text-slate-500">${formatDate(req.dateMailed)}</td>
+                            <td class="p-2.5">${getStatusBadge(req.status)}</td>
+                            <td class="p-2.5 text-slate-500">${req.dateReturned ? formatDate(req.dateReturned) : '-'}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            document.getElementById('modal-signer-detail').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function editSignerFromDetail() {
+            closeModal('modal-signer-detail');
+            if (activeDetailSignerId) {
+                openEditSignerModal(activeDetailSignerId);
+            }
+        }
+
+        // --- Helpers & Utilities ---
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function getStatusBadge(status) {
+            switch (status) {
+                case 'mailed':
+                    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800"><span class="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5"></span>Mailed</span>`;
+                case 'returned_signed':
+                    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>Signed</span>`;
+                case 'returned_unsigned':
+                    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-800"><span class="w-1.5 h-1.5 rounded-full bg-orange-500 mr-1.5"></span>Unsigned</span>`;
+                case 'no_response':
+                    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-200 text-slate-700"><span class="w-1.5 h-1.5 rounded-full bg-slate-500 mr-1.5"></span>No Response</span>`;
+                case 'rts':
+                    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800"><span class="w-1.5 h-1.5 rounded-full bg-rose-500 mr-1.5"></span>RTS</span>`;
+                default:
+                    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-800">${status}</span>`;
+            }
+        }
+
+        function formatStatusName(status) {
+            const map = {
+                mailed: 'Mailed',
+                returned_signed: 'Returned Signed',
+                returned_unsigned: 'Returned Unsigned',
+                no_response: 'No Response',
+                rts: 'RTS'
+            };
+            return map[status] || status;
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            return isNaN(d) ? dateStr : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // Initialize application on load
+        window.onload = function() {
+            loadData();
+            renderDashboard();
+            lucide.createIcons();
+        };
+    </script>
+</body>
+</html>
